@@ -1,9 +1,10 @@
-tensorflow==2.15.0
+tensorflow==2.20.0
+streamlit
 pandas
 numpy
 scikit-learn
-streamlit
 shap
 joblib
 matplotlib
 lime
+protobuf>=5.28.0
