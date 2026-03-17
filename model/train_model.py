@@ -14,14 +14,8 @@ from imblearn.pipeline import Pipeline
 os.makedirs("saved_model", exist_ok=True)
 os.makedirs("figures", exist_ok=True)
 
-# -------------------------
-# Load Dataset
-# -------------------------
-df = pd.read_csv("data/Obesity prediction.csv")
 
-# -------------------------
-# Feature Engineering
-# -------------------------
+df = pd.read_csv("data/Obesity prediction.csv")
 df["Weight_to_Age"] = df["Weight"] / df["Age"]
 df["Height_to_Age"] = df["Height"] / df["Age"]
 df["Activity_Ratio"] = df["FAF"] / (df["TUE"] + 1)
@@ -42,9 +36,6 @@ target = "Obesity"
 X = df[features].copy()
 y = df[target]
 
-# -------------------------
-# Encode Categorical Features
-# -------------------------
 categorical_cols = ["family_history", "SMOKE", "FAVC"]
 cat_encoders = {}
 
@@ -53,15 +44,9 @@ for col in categorical_cols:
     X[col] = le.fit_transform(X[col])
     cat_encoders[col] = le
 
-# -------------------------
-# Encode Target
-# -------------------------
 label_encoder = LabelEncoder()
 y_encoded = label_encoder.fit_transform(y)
 
-# -------------------------
-# Train/Test Split
-# -------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y_encoded,
@@ -69,10 +54,6 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42,
     stratify=y_encoded
 )
-
-# -------------------------
-# Build Pipeline
-# -------------------------
 pipeline = Pipeline([
     ("scaler", StandardScaler()),
     ("smote", SMOTE(random_state=42)),
@@ -90,14 +71,7 @@ pipeline = Pipeline([
     ))
 ])
 
-# -------------------------
-# Train Pipeline
-# -------------------------
 pipeline.fit(X_train, y_train)
-
-# -------------------------
-# Evaluate
-# -------------------------
 y_pred = pipeline.predict(X_test)
 
 accuracy = accuracy_score(y_test, y_pred)
@@ -105,13 +79,7 @@ accuracy = accuracy_score(y_test, y_pred)
 print("\nXGBoost Test Accuracy:", round(accuracy, 4))
 print("\nClassification Report:\n")
 print(classification_report(y_test, y_pred))
-
-# -------------------------
-# Confusion Matrix (Improved)
-# -------------------------
 cm = confusion_matrix(y_test, y_pred)
-
-# Normalize (important for papers)
 cm_normalized = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
 
 plt.figure()
@@ -134,13 +102,8 @@ plt.tight_layout()
 plt.savefig("figures/confusion_matrix.png")
 plt.show()
 
-# -------------------------
-# Feature Importance (Paper Bonus)
-# -------------------------
 model = pipeline.named_steps["model"]
-
 importances = model.feature_importances_
-
 plt.figure()
 plt.bar(features, importances)
 plt.title("Feature Importance (XGBoost)")
@@ -150,15 +113,10 @@ plt.tight_layout()
 plt.savefig("figures/feature_importance.png")
 plt.show()
 
-# -------------------------
-# Cross Validation
-# -------------------------
+
 cv_scores = cross_val_score(pipeline, X, y_encoded, cv=5)
 print("CV Accuracy:", round(cv_scores.mean(), 4))
 
-# -------------------------
-# Save Components
-# -------------------------
 joblib.dump(model, "saved_model/xgboost_model.pkl")
 joblib.dump(pipeline.named_steps["scaler"], "saved_model/scaler.pkl")
 joblib.dump(label_encoder, "saved_model/label_encoder.pkl")
